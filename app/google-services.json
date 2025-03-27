@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "26573963214",
+    "project_id": "kurso-d7308",
+    "storage_bucket": "kurso-d7308.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:26573963214:android:43a59e2f3cc0d68ab2359f",
+        "android_client_info": {
+          "package_name": "com.example.kurso"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBq8oKW1xiUmKtiDKBOy0Ukya8iSFsdP14"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
