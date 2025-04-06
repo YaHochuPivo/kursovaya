@@ -3,4 +3,5 @@
         android:id="@+id/nav_notes"
         android:icon="@drawable/ic_notes"
         android:title="Заметки" />
+
 </menu>

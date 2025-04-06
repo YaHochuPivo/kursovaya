@@ -1,51 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_margin="8dp"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:elevation="4dp">
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:background="@android:color/white"
+    android:elevation="2dp">
+
+    <TextView
+        android:id="@+id/noteTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Заголовок"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/noteContent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Содержимое"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/noteDateTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Дата и время"
+        android:textSize="12sp"
+        android:textColor="@android:color/darker_gray"/>
+
+    <TextView
+        android:id="@+id/noteMood"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🙂"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/noteTags"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Теги: нет"
+        android:textSize="14sp" />
+
 
     <LinearLayout
-        android:padding="12dp"
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
 
-        <TextView
-            android:id="@+id/noteTitle"
-            android:textStyle="bold"
-            android:textSize="18sp"
+        <Button
+            android:id="@+id/btnEditNote"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:text="✏️ Редактировать"
+            android:textSize="12sp"/>
 
-        <TextView
-            android:id="@+id/noteContent"
-            android:layout_marginTop="4dp"
+        <Button
+            android:id="@+id/btnDeleteNote"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/noteDateTime"
-            android:layout_marginTop="6dp"
-            android:textColor="#888"
-            android:textSize="12sp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/noteMood"
-            android:layout_marginTop="4dp"
-            android:text="😊"
-            android:textSize="20sp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/noteTags"
-            android:layout_marginTop="6dp"
-            android:textColor="#555"
-            android:textSize="12sp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:text="🗑 Удалить"
+            android:textSize="12sp"/>
     </LinearLayout>
-</androidx.cardview.widget.CardView>
+</LinearLayout>

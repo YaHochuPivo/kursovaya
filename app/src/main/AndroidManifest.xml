@@ -2,6 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Права на чтение/запись -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -12,20 +17,28 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Kurso"
         tools:targetApi="31">
+
+        <!-- LoginActivity — стартовая -->
         <activity
             android:name=".LoginActivity"
-
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MainActivity" />
-        <activity android:name=".CreateNoteActivity" />
-        <activity android:name=".DailyPlanActivity" />
 
+        <!-- Главная активность -->
+        <activity android:name=".MainActivity" />
+
+        <!-- Поддержка "Назад" (стрелки вверх) -->
+        <activity
+            android:name=".CreateNoteActivity"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".DailyPlanActivity"
+            android:parentActivityName=".MainActivity" />
     </application>
 
 </manifest>

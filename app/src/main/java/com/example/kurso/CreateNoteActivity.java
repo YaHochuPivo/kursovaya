@@ -7,9 +7,14 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+
 import java.text.SimpleDateFormat;
 import java.util.*;
+import com.google.android.material.appbar.MaterialToolbar;
+
 
 public class CreateNoteActivity extends AppCompatActivity {
     private EditText editTitle, editContent;
@@ -18,6 +23,7 @@ public class CreateNoteActivity extends AppCompatActivity {
     private List<String> selectedTags = new ArrayList<>();
     private String selectedMoodStr = "";
     private FirebaseFirestore db;
+    private FirebaseAuth auth;
     private String noteId;
 
     private final String[] availableTags = {"дома", "на улице", "с друзьями", "один"};
@@ -27,6 +33,15 @@ public class CreateNoteActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_note);
 
+        MaterialToolbar toolbar = findViewById(R.id.topAppBar);
+        setSupportActionBar(toolbar);
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false); // ⛔️ Убираем заголовок
+        }
+
+
         editTitle = findViewById(R.id.editTitle);
         editContent = findViewById(R.id.editContent);
         textDateTime = findViewById(R.id.textDateTime);
@@ -35,39 +50,42 @@ public class CreateNoteActivity extends AppCompatActivity {
         Button btnSelectDateTime = findViewById(R.id.btnSelectDateTime);
         Button btnAddTag = findViewById(R.id.btnAddTag);
         Button btnSave = findViewById(R.id.btnSave);
+
         db = FirebaseFirestore.getInstance();
+        auth = FirebaseAuth.getInstance();
 
-        // Настроение
-        setupMoodSelection();
-
-        // Дата по умолчанию
         selectedDateTime = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(new Date());
         textDateTime.setText("Дата и время: " + selectedDateTime);
 
         btnSelectDateTime.setOnClickListener(v -> showDateTimePicker());
         btnAddTag.setOnClickListener(v -> showTagSelector());
 
-        // Если редактируем
-        Intent intent = getIntent();
-        if (intent.hasExtra("noteId")) {
-            noteId = intent.getStringExtra("noteId");
-            editTitle.setText(intent.getStringExtra("noteTitle"));
-            editContent.setText(intent.getStringExtra("noteContent"));
-            // Здесь можно будет загрузить и mood/tags
+        setupMoodSelection();
+
+        if (getIntent().hasExtra("noteId")) {
+            noteId = getIntent().getStringExtra("noteId");
+            loadNoteFromFirestore(noteId);
         }
 
         btnSave.setOnClickListener(v -> saveNote());
     }
 
+    @Override
+    public boolean onSupportNavigateUp() {
+        finish();  // Закрыть текущую активити и вернуться назад
+        return true;
+    }
+
+
     private void setupMoodSelection() {
         int[] moodIds = {R.id.mood_sad, R.id.mood_angry, R.id.mood_neutral, R.id.mood_happy, R.id.mood_excited};
-        String[] moodValues = {"sad", "angry", "neutral", "happy", "excited"};
+        String[] moodValues = {"Грустный", "Злой", "Нейтральный", "Счастливый", "Возбужденный"};
 
         for (int i = 0; i < moodIds.length; i++) {
             int index = i;
             findViewById(moodIds[i]).setOnClickListener(v -> {
                 selectedMoodStr = moodValues[index];
-                selectedMood.setText("Настроение выбрано: " + ((TextView) v).getText());
+                selectedMood.setText("Настроение: " + selectedMoodStr);
             });
         }
     }
@@ -103,6 +121,27 @@ public class CreateNoteActivity extends AppCompatActivity {
                 .show();
     }
 
+    private void loadNoteFromFirestore(String noteId) {
+        db.collection("notes").document(noteId).get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                editTitle.setText(documentSnapshot.getString("title"));
+                editContent.setText(documentSnapshot.getString("content"));
+                selectedDateTime = documentSnapshot.getString("dateTime");
+                textDateTime.setText("Дата и время: " + selectedDateTime);
+
+                selectedMoodStr = documentSnapshot.getString("mood");
+                if (selectedMoodStr != null) {
+                    selectedMood.setText("Настроение: " + selectedMoodStr);
+                }
+
+                selectedTags = (List<String>) documentSnapshot.get("tags");
+                if (selectedTags != null && !selectedTags.isEmpty()) {
+                    textTags.setText("Теги: " + String.join(", ", selectedTags));
+                }
+            }
+        }).addOnFailureListener(e -> Toast.makeText(this, "Ошибка загрузки заметки", Toast.LENGTH_SHORT).show());
+    }
+
     private void saveNote() {
         String title = editTitle.getText().toString().trim();
         String content = editContent.getText().toString().trim();
@@ -112,15 +151,24 @@ public class CreateNoteActivity extends AppCompatActivity {
             return;
         }
 
+        String userId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
+        if (userId == null) {
+            Toast.makeText(this, "Ошибка авторизации", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         Map<String, Object> note = new HashMap<>();
         note.put("title", title);
         note.put("content", content);
         note.put("dateTime", selectedDateTime);
-        note.put("tags", selectedTags);
-        note.put("mood", selectedMoodStr);
+        note.put("mood", selectedMoodStr != null ? selectedMoodStr : "Не указано");
+        note.put("tags", selectedTags != null ? selectedTags : new ArrayList<String>());
+        note.put("userId", userId);
 
         if (noteId == null) {
-            db.collection("notes").add(note).addOnSuccessListener(docRef -> {
+            db.collection("notes").add(note).addOnSuccessListener(documentReference -> {
+                String newNoteId = documentReference.getId();
+                db.collection("notes").document(newNoteId).update("id", newNoteId);
                 Toast.makeText(this, "Заметка сохранена", Toast.LENGTH_SHORT).show();
                 finish();
             });

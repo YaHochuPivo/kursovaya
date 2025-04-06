@@ -1,43 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:fitsSystemWindows="true">
 
-    <EditText
-        android:id="@+id/editTask1"
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/topAppBar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Задача 1" />
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:title="План на день"
+        android:titleTextColor="@android:color/white" />
 
-    <EditText
-        android:id="@+id/editTask2"
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Задача 2" />
+        android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:padding="16dp">
 
-    <EditText
-        android:id="@+id/editTask3"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Задача 3" />
+        <Button
+            android:id="@+id/btnAddTask"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Добавить задачу" />
 
-    <EditText
-        android:id="@+id/editTask4"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Задача 4" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewTasks"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
-    <EditText
-        android:id="@+id/editTask5"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Задача 5" />
-
-    <Button
-        android:id="@+id/btnSavePlan"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Сохранить план" />
-</LinearLayout>
+        <Button
+            android:id="@+id/btnSavePlan"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Сохранить план" />
+    </LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

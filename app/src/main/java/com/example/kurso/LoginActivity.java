@@ -29,6 +29,10 @@ public class LoginActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.auth_activity);
 
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
+
         mAuth = FirebaseAuth.getInstance();
         emailField = findViewById(R.id.emailField);
         passwordField = findViewById(R.id.passwordField);
