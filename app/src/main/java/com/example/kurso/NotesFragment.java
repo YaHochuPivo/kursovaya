@@ -16,6 +16,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -40,8 +41,27 @@ public class NotesFragment extends Fragment {
     private NotesAdapter adapter;
     private List<Object> itemList;
     private FirebaseFirestore db;
-
     private ActivityResultLauncher<Intent> filePickerLauncher;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        filePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Uri uri = result.getData().getData();
+                        if (uri != null) {
+                            String path = uri.getPath();
+                            if (path != null && path.endsWith(".csv")) importFromCSV(uri);
+                            else if (path != null && path.endsWith(".json")) importFromJSON(uri);
+                            else Toast.makeText(getContext(), "Поддерживаются только .csv и .json", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+    }
+
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -64,21 +84,6 @@ public class NotesFragment extends Fragment {
         btnAddPlan.setOnClickListener(v -> startActivity(new Intent(getContext(), DailyPlanActivity.class)));
         btnImport.setOnClickListener(v -> openFilePicker());
         btnExport.setOnClickListener(v -> showExportFormatDialog());
-
-        // 🔹 Регистрируем filePicker
-        filePickerLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                        Uri uri = result.getData().getData();
-                        if (uri != null) {
-                            String path = uri.getPath();
-                            if (path != null && path.endsWith(".csv")) importFromCSV(uri);
-                            else if (path != null && path.endsWith(".json")) importFromJSON(uri);
-                            else Toast.makeText(getContext(), "Поддерживаются только .csv и .json", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
 
         loadData();
         return view;
@@ -122,9 +127,9 @@ public class NotesFragment extends Fragment {
     private void openFilePicker() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("*/*");
-        intent.addCategory(Intent.CATEGORY_OPENABLE); // 🔹 важно!
         filePickerLauncher.launch(intent);
     }
+
 
     private void importFromCSV(Uri uri) {
         try (InputStream inputStream = requireContext().getContentResolver().openInputStream(uri);
