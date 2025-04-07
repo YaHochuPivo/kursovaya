@@ -1,68 +1,91 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="8dp"
-    android:background="@android:color/white"
-    android:elevation="2dp">
-
-    <TextView
-        android:id="@+id/noteTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Заголовок"
-        android:textSize="18sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/noteContent"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Содержимое"
-        android:textSize="14sp" />
-
-    <TextView
-        android:id="@+id/noteDateTime"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Дата и время"
-        android:textSize="12sp"
-        android:textColor="@android:color/darker_gray"/>
-
-    <TextView
-        android:id="@+id/noteMood"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="🙂"
-        android:textSize="16sp" />
-
-    <TextView
-        android:id="@+id/noteTags"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Теги: нет"
-        android:textSize="14sp" />
-
+    android:layout_margin="8dp"
+    card_view:cardCornerRadius="8dp"
+    card_view:cardElevation="6dp"
+    android:background="@android:color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="end">
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <Button
-            android:id="@+id/btnEditNote"
+        <TextView
+            android:id="@+id/textTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="✏️ Редактировать"
-            android:textSize="12sp"/>
+            android:text="Заголовок"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/black" />
 
-        <Button
-            android:id="@+id/btnDeleteNote"
+        <TextView
+            android:id="@+id/textContent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="🗑 Удалить"
-            android:textSize="12sp"/>
+            android:text="Содержимое"
+            android:layout_marginTop="4dp"
+            android:textColor="#555555" />
+
+        <TextView
+            android:id="@+id/textDateTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Дата и время"
+            android:layout_marginTop="4dp"
+            android:textColor="#777777"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/textMood"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Настроение"
+            android:layout_marginTop="4dp"
+            android:textColor="#777777"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/textTags"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Теги"
+            android:layout_marginTop="4dp"
+            android:textColor="#888888"
+            android:textSize="12sp" />
+
+        <!-- Горизонтальные кнопки -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btnEdit"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_edit"
+                android:contentDescription="Редактировать"
+                android:tint="@color/purple_500" />
+
+            <ImageButton
+                android:id="@+id/btnDelete"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="16dp"
+                android:background="?attr/selectableItemBackground"
+                android:src="@android:drawable/ic_menu_delete"
+                android:tint="@color/delete_red"
+                android:contentDescription="@string/delete_description" />
+
+        </LinearLayout>
+
     </LinearLayout>
-</LinearLayout>
+
+</androidx.cardview.widget.CardView>

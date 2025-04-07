@@ -2,193 +2,167 @@ package com.example.kurso;
 
 import android.content.Context;
 import android.content.Intent;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
+import android.view.*;
+import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class NotesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    private static final int TYPE_NOTE = 0;
-    private static final int TYPE_PLAN = 1;
+    private final int TYPE_NOTE = 0;
+    private final int TYPE_PLAN = 1;
 
-    private Context context;
-    private List<Object> itemList;
-    private FirebaseFirestore db;
+    private final Context context;
+    private final List<Object> originalList = new ArrayList<>();
+    private final List<Object> filteredList = new ArrayList<>();
 
     public NotesAdapter(Context context, List<Object> itemList) {
         this.context = context;
-        this.itemList = itemList;
-        this.db = FirebaseFirestore.getInstance();
+        updateData(itemList);
+    }
+
+    public void filter(String query) {
+        filteredList.clear();
+
+        if (query == null || query.trim().isEmpty()) {
+            filteredList.addAll(originalList); // показать всё
+        } else {
+            String lowerQuery = query.toLowerCase(Locale.getDefault());
+
+            for (Object item : originalList) {
+                if (item instanceof Note) {
+                    Note note = (Note) item;
+
+                    boolean matchesTitle = note.getTitle() != null && note.getTitle().toLowerCase().contains(lowerQuery);
+                    boolean matchesContent = note.getContent() != null && note.getContent().toLowerCase().contains(lowerQuery);
+                    boolean matchesMood = note.getMood() != null && note.getMood().toLowerCase().contains(lowerQuery);
+                    boolean matchesTags = note.getTags() != null && note.getTags().toString().toLowerCase().contains(lowerQuery);
+
+                    if (matchesTitle || matchesContent || matchesMood || matchesTags) {
+                        filteredList.add(note);
+                    }
+                }
+                // 🔴 НЕ добавляем PlanWrapper при фильтрации
+            }
+        }
+
+        notifyDataSetChanged();
+    }
+
+
+    public void updateData(List<Object> newData) {
+        originalList.clear();
+        originalList.addAll(newData);
+        filteredList.clear();
+        filteredList.addAll(newData);
+        notifyDataSetChanged();
     }
 
     @Override
     public int getItemViewType(int position) {
-        Object item = itemList.get(position);
-        if (item instanceof Note) return TYPE_NOTE;
-        else return TYPE_PLAN;
+        return filteredList.get(position) instanceof Note ? TYPE_NOTE : TYPE_PLAN;
     }
 
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_note, parent, false);
-        if (viewType == TYPE_NOTE) return new NoteViewHolder(view);
-        else return new PlanViewHolder(view);
+        LayoutInflater inflater = LayoutInflater.from(context);
+        if (viewType == TYPE_NOTE) {
+            return new NoteViewHolder(inflater.inflate(R.layout.item_note, parent, false));
+        } else {
+            return new PlanViewHolder(inflater.inflate(R.layout.item_plan, parent, false));
+        }
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        Object item = itemList.get(position);
-
-        if (holder instanceof NoteViewHolder && item instanceof Note) {
-            Note note = (Note) item;
-            NoteViewHolder h = (NoteViewHolder) holder;
-
-            h.title.setText(note.getTitle());
-            h.content.setText(note.getContent());
-            h.dateTime.setText("Дата: " + note.getDateTime());
-
-            // Настроение
-            String mood = note.getMood();
-            String emoji = "😶";
-            if (mood != null) {
-                switch (mood.toLowerCase()) {
-                    case "грустный": emoji = "😢"; break;
-                    case "злой": emoji = "😠"; break;
-                    case "нейтральный": emoji = "😐"; break;
-                    case "счастливый": emoji = "🙂"; break;
-                    case "возбужденный": emoji = "😄"; break;
-                }
-            }
-            h.mood.setText(emoji);
-
-            // Теги
-            if (note.getTags() != null && !note.getTags().isEmpty()) {
-                h.tags.setText("Теги: " + android.text.TextUtils.join(", ", note.getTags()));
-            } else {
-                h.tags.setText("Теги: —");
-            }
-
-            // Кнопка редактирования
-            h.btnEdit.setOnClickListener(v -> {
-                Intent intent = new Intent(context, CreateNoteActivity.class);
-                intent.putExtra("noteId", note.getId());
-                intent.putExtra("noteTitle", note.getTitle());
-                intent.putExtra("noteContent", note.getContent());
-                intent.putExtra("noteDateTime", note.getDateTime());
-                intent.putExtra("noteMood", note.getMood());
-                intent.putStringArrayListExtra("noteTags", new ArrayList<>(note.getTags() != null ? note.getTags() : new ArrayList<>()));
-                context.startActivity(intent);
-            });
-
-            // Кнопка удаления
-            h.btnDelete.setOnClickListener(v -> {
-                String id = note.getId();
-                if (id != null && !id.isEmpty()) {
-                    db.collection("notes").document(id).delete()
-                            .addOnSuccessListener(aVoid -> {
-                                itemList.remove(position);
-                                notifyItemRemoved(position);
-                                notifyItemRangeChanged(position, itemList.size());
-                            });
-                }
-            });
-
-        } else if (holder instanceof PlanViewHolder && item instanceof PlanWrapper) {
-            PlanViewHolder h = (PlanViewHolder) holder;
-            PlanWrapper plan = (PlanWrapper) item;
-
-            h.title.setText("📅 План на день");
-            h.content.setText(joinTasks(plan.getTasks()));
-            h.dateTime.setText("");
-            h.mood.setText("🗂");
-            h.tags.setText("Задач: " + (plan.getTasks() != null ? plan.getTasks().size() : 0));
-
-            // Редактирование плана
-            h.btnEdit.setOnClickListener(v -> {
-                Intent intent = new Intent(context, DailyPlanActivity.class);
-                intent.putExtra("planId", plan.getId());
-                intent.putStringArrayListExtra("tasks", new ArrayList<>(plan.getTasks()));
-                context.startActivity(intent);
-            });
-
-            // Удаление плана
-            h.btnDelete.setOnClickListener(v -> {
-                if (plan.getId() != null && !plan.getId().isEmpty()) {
-                    db.collection("daily_plans").document(plan.getId()).delete()
-                            .addOnSuccessListener(aVoid -> {
-                                itemList.remove(position);
-                                notifyItemRemoved(position);
-                                notifyItemRangeChanged(position, itemList.size());
-                            });
-                }
-            });
+        Object item = filteredList.get(position);
+        if (holder instanceof NoteViewHolder) {
+            ((NoteViewHolder) holder).bind((Note) item);
+        } else if (holder instanceof PlanViewHolder) {
+            ((PlanViewHolder) holder).bind((PlanWrapper) item);
         }
     }
 
     @Override
     public int getItemCount() {
-        return itemList.size();
+        return filteredList.size();
     }
 
-    private String joinTasks(List<String> tasks) {
-        StringBuilder builder = new StringBuilder();
-        for (String task : tasks) {
-            builder.append("• ").append(task).append("\n");
-        }
-        return builder.toString().trim();
-    }
-
-    // 🔹 ViewHolder для заметки
-    public static class NoteViewHolder extends RecyclerView.ViewHolder {
-        TextView title, content, dateTime, mood, tags;
-        Button btnEdit, btnDelete;
-
-        public NoteViewHolder(@NonNull View itemView) {
-            super(itemView);
-            title = itemView.findViewById(R.id.noteTitle);
-            content = itemView.findViewById(R.id.noteContent);
-            dateTime = itemView.findViewById(R.id.noteDateTime);
-            mood = itemView.findViewById(R.id.noteMood);
-            tags = itemView.findViewById(R.id.noteTags);
-            btnEdit = itemView.findViewById(R.id.btnEditNote);
-            btnDelete = itemView.findViewById(R.id.btnDeleteNote);
-        }
-    }
-
-    // 🔹 ViewHolder для плана (наследуем поля NoteViewHolder)
-    public static class PlanViewHolder extends NoteViewHolder {
-        public PlanViewHolder(@NonNull View itemView) {
-            super(itemView);
-        }
-    }
-
-    // 🔹 Обёртка для плана
-    public static class PlanWrapper {
-        private String id;
-        private List<String> tasks;
+    static class PlanWrapper {
+        public String id;
+        public List<String> tasks;
 
         public PlanWrapper(String id, List<String> tasks) {
             this.id = id;
             this.tasks = tasks;
         }
+    }
 
-        public String getId() {
-            return id;
+    class NoteViewHolder extends RecyclerView.ViewHolder {
+        TextView title, content, dateTime, mood, tags;
+        ImageButton btnEdit, btnDelete;
+
+        NoteViewHolder(@NonNull View itemView) {
+            super(itemView);
+            title = itemView.findViewById(R.id.textTitle);
+            content = itemView.findViewById(R.id.textContent);
+            dateTime = itemView.findViewById(R.id.textDateTime);
+            mood = itemView.findViewById(R.id.textMood);
+            tags = itemView.findViewById(R.id.textTags);
+            btnEdit = itemView.findViewById(R.id.btnEdit);
+            btnDelete = itemView.findViewById(R.id.btnDelete);
         }
 
-        public List<String> getTasks() {
-            return tasks;
+        void bind(Note note) {
+            title.setText(note.getTitle());
+            content.setText(note.getContent());
+            dateTime.setText(note.getDateTime());
+            mood.setText("Настроение: " + (note.getMood() != null ? note.getMood() : "—"));
+            tags.setText(note.getTags() != null && !note.getTags().isEmpty()
+                    ? "Теги: " + String.join(", ", note.getTags())
+                    : "Теги: —");
+
+            btnEdit.setOnClickListener(v -> {
+                Intent intent = new Intent(context, CreateNoteActivity.class);
+                intent.putExtra("noteId", note.getId());
+                context.startActivity(intent);
+            });
+
+            btnDelete.setOnClickListener(v -> {
+                FirebaseFirestore.getInstance().collection("notes").document(note.getId())
+                        .delete()
+                        .addOnSuccessListener(aVoid -> {
+                            Toast.makeText(context, "Заметка удалена", Toast.LENGTH_SHORT).show();
+                            originalList.remove(note);
+                            filter(""); // обновим список
+                        })
+                        .addOnFailureListener(e -> Toast.makeText(context, "Ошибка удаления", Toast.LENGTH_SHORT).show());
+            });
+        }
+    }
+
+    class PlanViewHolder extends RecyclerView.ViewHolder {
+        TextView textPlan;
+
+        PlanViewHolder(@NonNull View itemView) {
+            super(itemView);
+            textPlan = itemView.findViewById(R.id.textPlan);
+        }
+
+        void bind(PlanWrapper plan) {
+            StringBuilder builder = new StringBuilder("План на день:\n");
+            for (String task : plan.tasks) {
+                builder.append("• ").append(task).append("\n");
+            }
+            textPlan.setText(builder.toString().trim());
         }
     }
 }

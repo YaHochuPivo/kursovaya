@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">kurso</string>
+    <string name="delete_description">Удалить</string>
+
 </resources>
