@@ -17,6 +17,11 @@ public class MainActivity extends AppCompatActivity {
         // Устанавливаем Toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(""); // ⬅️ убирает заголовок
+        }
+
+
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
 

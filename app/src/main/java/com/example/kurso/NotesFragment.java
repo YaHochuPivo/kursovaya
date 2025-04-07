@@ -2,9 +2,9 @@ package com.example.kurso;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.*;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SearchView;
@@ -26,8 +26,7 @@ public class NotesFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        setHasOptionsMenu(true); // Включает меню для фрагмента
-
+        setHasOptionsMenu(true);
         View view = inflater.inflate(R.layout.fragment_notes, container, false);
 
         recyclerView = view.findViewById(R.id.recyclerView);
@@ -40,13 +39,40 @@ public class NotesFragment extends Fragment {
 
         Button btnAddNote = view.findViewById(R.id.btnAddNote);
         Button btnAddPlan = view.findViewById(R.id.btnAddPlan);
+        Button btnExport = view.findViewById(R.id.btnExport);
+        Button btnImport = view.findViewById(R.id.btnImport);
 
         btnAddNote.setOnClickListener(v -> startActivity(new Intent(getContext(), CreateNoteActivity.class)));
         btnAddPlan.setOnClickListener(v -> startActivity(new Intent(getContext(), DailyPlanActivity.class)));
 
+        btnExport.setOnClickListener(v -> {
+            adapter.setSelectionMode(true); // включаем режим выделения
+            Toast.makeText(getContext(), "Выделите элементы и нажмите экспорт ещё раз", Toast.LENGTH_SHORT).show();
+        });
+
+        btnExport.setOnLongClickListener(v -> {
+            List<Object> selectedItems = adapter.getSelectedItems();
+            if (selectedItems.isEmpty()) {
+                Toast.makeText(getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
+            } else {
+                FileUtils.exportData(requireContext(), selectedItems, "json"); // Можно изменить на "csv" / "pdf"
+            }
+            adapter.setSelectionMode(false);
+            return true;
+        });
+
+        btnImport.setOnClickListener(v -> {
+            FileUtils.importData(requireContext(), "json", importedItems -> {
+                allItems.addAll(importedItems);
+                adapter.updateData(allItems);
+                Toast.makeText(getContext(), "Импортировано: " + importedItems.size(), Toast.LENGTH_SHORT).show();
+            });
+        });
+
         loadData();
         return view;
     }
+
 
     private void loadData() {
         allItems.clear();
@@ -74,7 +100,7 @@ public class NotesFragment extends Fragment {
                                     }
                                 }
 
-                                adapter.updateData(allItems); // передаём всё в адаптер
+                                adapter.updateData(allItems);
                             });
                 });
     }
@@ -93,7 +119,6 @@ public class NotesFragment extends Fragment {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                Log.d("FILTER", "Фильтрация: " + newText);
                 if (adapter != null) {
                     adapter.filter(newText);
                 }

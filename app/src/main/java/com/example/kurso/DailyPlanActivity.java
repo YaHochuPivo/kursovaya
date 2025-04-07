@@ -37,7 +37,8 @@ public class DailyPlanActivity extends AppCompatActivity {
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowTitleEnabled(false); // ⛔️ Убираем заголовок
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            // ⛔️ Убираем заголовок
         }
 
 
