@@ -7,6 +7,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -52,14 +53,27 @@ public class NotesFragment extends Fragment {
 
         btnExport.setOnLongClickListener(v -> {
             List<Object> selectedItems = adapter.getSelectedItems();
+
             if (selectedItems.isEmpty()) {
-                Toast.makeText(getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
-            } else {
-                FileUtils.exportData(requireContext(), selectedItems, "json"); // Можно изменить на "csv" / "pdf"
+                Toast.makeText(getContext(), "Выберите элементы для экспорта", Toast.LENGTH_SHORT).show();
+                return true;
             }
-            adapter.setSelectionMode(false);
+
+            String[] formats = {"JSON", "CSV", "PDF"};
+
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Выберите формат экспорта")
+                    .setItems(formats, (dialog, which) -> {
+                        String selectedFormat = formats[which].toLowerCase();
+                        FileUtils.exportData(requireContext(), selectedItems, selectedFormat);
+                        adapter.setSelectionMode(false);
+                    })
+                    .setNegativeButton("Отмена", null)
+                    .show();
+
             return true;
         });
+
 
         btnImport.setOnClickListener(v -> {
             FileUtils.importData(requireContext(), "json", importedItems -> {

@@ -1,6 +1,9 @@
 package com.example.kurso;
 
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.pdf.PdfDocument;
 import android.os.Environment;
 import android.widget.Toast;
 
@@ -122,12 +125,57 @@ public class FileUtils {
         }
     }
 
-    private static void exportToPdf(Context context, List<Object> items, File file) {
-        // Можно подключить iText или PdfDocument API
-        Toast.makeText(context, "PDF экспорт пока не реализован", Toast.LENGTH_SHORT).show();
-    }
+
 
     public interface DataImportCallback {
         void onDataImported(List<Object> importedItems);
     }
+    private static void exportToPdf(Context context, List<Object> items, File file) {
+        try {
+            PdfDocument pdfDoc = new PdfDocument();
+            Paint paint = new Paint();
+            int y = 50;
+            int pageNumber = 1;
+
+            PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, pageNumber).create();
+            PdfDocument.Page page = pdfDoc.startPage(pageInfo);
+            Canvas canvas = page.getCanvas();
+
+            for (Object obj : items) {
+                if (y > 800) {
+                    pdfDoc.finishPage(page);
+                    pageNumber++;
+                    pageInfo = new PdfDocument.PageInfo.Builder(595, 842, pageNumber).create();
+                    page = pdfDoc.startPage(pageInfo);
+                    canvas = page.getCanvas();
+                    y = 50;
+                }
+
+                if (obj instanceof Note) {
+                    Note note = (Note) obj;
+                    canvas.drawText("Заголовок: " + note.getTitle(), 20, y, paint); y += 20;
+                    canvas.drawText("Содержимое: " + note.getContent(), 20, y, paint); y += 20;
+                    canvas.drawText("Дата: " + note.getDateTime(), 20, y, paint); y += 30;
+                } else if (obj instanceof PlanWrapper) {
+                    canvas.drawText("План на день:", 20, y, paint); y += 20;
+                    for (String task : ((PlanWrapper) obj).getTasks()) {
+                        canvas.drawText("• " + task, 40, y, paint); y += 20;
+                    }
+                    y += 10;
+                }
+            }
+
+            pdfDoc.finishPage(page);
+
+            FileOutputStream fos = new FileOutputStream(file);
+            pdfDoc.writeTo(fos);
+            pdfDoc.close();
+            fos.close();
+
+            Toast.makeText(context, "PDF экспорт завершён: " + file.getAbsolutePath(), Toast.LENGTH_LONG).show();
+        } catch (IOException e) {
+            Toast.makeText(context, "Ошибка экспорта PDF: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
 }
