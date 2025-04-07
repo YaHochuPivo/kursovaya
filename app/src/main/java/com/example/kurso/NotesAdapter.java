@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.example.kurso.PlanWrapper; // ✅ Используем внешний PlanWrapper
 
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -53,6 +54,7 @@ public class NotesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                 selected.add(filteredList.get(pos));
             }
         }
+
         return selected;
     }
 
@@ -214,17 +216,5 @@ public class NotesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         filter(""); // сбрасывает фильтр и обновляет
     }
 
-    public static class PlanWrapper {
-        public String id;
-        public List<String> tasks;
 
-        public PlanWrapper(String id, List<String> tasks) {
-            this.id = id;
-            this.tasks = tasks;
-        }
-
-        public List<String> getTasks() {
-            return tasks;
-        }
-    }
 }

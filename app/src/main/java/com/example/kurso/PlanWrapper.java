@@ -19,3 +19,4 @@ public class PlanWrapper {
     public void setId(String id) { this.id = id; }
     public void setTasks(List<String> tasks) { this.tasks = tasks; }
 }
+

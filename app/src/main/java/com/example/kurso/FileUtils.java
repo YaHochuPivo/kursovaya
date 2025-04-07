@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.pdf.PdfDocument;
 import android.os.Environment;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.example.kurso.PlanWrapper; // ✅ правильный импорт
@@ -131,51 +132,61 @@ public class FileUtils {
         void onDataImported(List<Object> importedItems);
     }
     private static void exportToPdf(Context context, List<Object> items, File file) {
-        try {
-            PdfDocument pdfDoc = new PdfDocument();
-            Paint paint = new Paint();
-            int y = 50;
-            int pageNumber = 1;
+        PdfDocument document = new PdfDocument();
+        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, 1).create(); // A4
+        PdfDocument.Page page = document.startPage(pageInfo);
 
-            PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, pageNumber).create();
-            PdfDocument.Page page = pdfDoc.startPage(pageInfo);
-            Canvas canvas = page.getCanvas();
+        Canvas canvas = page.getCanvas();
+        Paint paint = new Paint();
+        paint.setTextSize(14);
+        int y = 40;
 
-            for (Object obj : items) {
-                if (y > 800) {
-                    pdfDoc.finishPage(page);
-                    pageNumber++;
-                    pageInfo = new PdfDocument.PageInfo.Builder(595, 842, pageNumber).create();
-                    page = pdfDoc.startPage(pageInfo);
-                    canvas = page.getCanvas();
-                    y = 50;
-                }
+        // 🔍 Вставляем отладку:
+        Log.d("PDF_EXPORT", "Количество элементов: " + items.size());
+        for (Object obj : items) {
+            Log.d("PDF_EXPORT", "Тип: " + obj.getClass().getSimpleName());
+            if (obj instanceof PlanWrapper) {
+                PlanWrapper plan = (PlanWrapper) obj;
+                Log.d("PDF_EXPORT", "План ID: " + plan.getId() + ", задач: " + (plan.getTasks() != null ? plan.getTasks().size() : "null"));
+            }
+        }
 
-                if (obj instanceof Note) {
-                    Note note = (Note) obj;
-                    canvas.drawText("Заголовок: " + note.getTitle(), 20, y, paint); y += 20;
-                    canvas.drawText("Содержимое: " + note.getContent(), 20, y, paint); y += 20;
-                    canvas.drawText("Дата: " + note.getDateTime(), 20, y, paint); y += 30;
-                } else if (obj instanceof PlanWrapper) {
-                    canvas.drawText("План на день:", 20, y, paint); y += 20;
-                    for (String task : ((PlanWrapper) obj).getTasks()) {
-                        canvas.drawText("• " + task, 40, y, paint); y += 20;
+        for (Object obj : items) {
+            if (obj instanceof Note) {
+                Note note = (Note) obj;
+                canvas.drawText("Заголовок впечатления: " + note.getTitle(), 40, y, paint); y += 20;
+                canvas.drawText("хз что: " + note.getContent(), 40, y, paint); y += 20;
+                canvas.drawText("Недата: " + note.getDateTime(), 40, y, paint); y += 30;
+            } else if (obj instanceof PlanWrapper) {
+                PlanWrapper plan = (PlanWrapper) obj;
+                List<String> tasks = plan.getTasks();
+                if (tasks == null || tasks.isEmpty()) {
+                    canvas.drawText("План на день пуст", 40, y, paint); y += 30;
+                } else {
+                    canvas.drawText("План на день:", 40, y, paint); y += 20;
+                    for (String task : tasks) {
+                        canvas.drawText("• " + task, 60, y, paint); y += 20;
                     }
-                    y += 10;
+                    y += 20;
                 }
             }
-
-            pdfDoc.finishPage(page);
-
-            FileOutputStream fos = new FileOutputStream(file);
-            pdfDoc.writeTo(fos);
-            pdfDoc.close();
-            fos.close();
-
-            Toast.makeText(context, "PDF экспорт завершён: " + file.getAbsolutePath(), Toast.LENGTH_LONG).show();
-        } catch (IOException e) {
-            Toast.makeText(context, "Ошибка экспорта PDF: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
+
+        document.finishPage(page);
+
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            document.writeTo(fos);
+            fos.close();
+            Toast.makeText(context, "PDF сохранён: " + file.getName(), Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            Toast.makeText(context, "Ошибка сохранения PDF", Toast.LENGTH_SHORT).show();
+        }
+
+        document.close();
     }
+
+
+
 
 }

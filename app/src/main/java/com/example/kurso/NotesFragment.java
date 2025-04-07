@@ -13,7 +13,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.kurso.NotesAdapter.PlanWrapper;
+
 import com.google.firebase.firestore.*;
 
 import java.util.*;
