@@ -2,47 +2,39 @@ package com.example.kurso;
 
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.Fragment;
-
-import com.google.android.material.bottomnavigation.BottomNavigationView;
+import androidx.viewpager2.widget.ViewPager2;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 
 public class MainActivity extends AppCompatActivity {
+    private ViewPager2 viewPager;
+    private TabLayout tabLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Устанавливаем Toolbar
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle(""); // ⬅️ убирает заголовок
-        }
+        viewPager = findViewById(R.id.viewPager);
+        tabLayout = findViewById(R.id.tabLayout);
 
+        setupViewPager();
+    }
 
+    private void setupViewPager() {
+        MainPagerAdapter pagerAdapter = new MainPagerAdapter(this);
+        viewPager.setAdapter(pagerAdapter);
 
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
-
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            Fragment selectedFragment = null;
-            if (item.getItemId() == R.id.nav_notes) {
-                selectedFragment = new NotesFragment();
-            }
-
-            if (selectedFragment != null) {
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, selectedFragment)
-                        .commit();
-            }
-
-            return true;
-        });
-
-        // По умолчанию открываем NotesFragment
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, new NotesFragment())
-                .commit();
+        new TabLayoutMediator(tabLayout, viewPager,
+                (tab, position) -> {
+                    switch (position) {
+                        case 0:
+                            tab.setText("Заметки");
+                            break;
+                        case 1:
+                            tab.setText("Статистика");
+                            break;
+                    }
+                }).attach();
     }
 }

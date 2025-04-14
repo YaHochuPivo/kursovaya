@@ -4,6 +4,7 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
@@ -126,8 +127,13 @@ public class CreateNoteActivity extends AppCompatActivity {
             if (documentSnapshot.exists()) {
                 editTitle.setText(documentSnapshot.getString("title"));
                 editContent.setText(documentSnapshot.getString("content"));
-                selectedDateTime = documentSnapshot.getString("dateTime");
-                textDateTime.setText("Дата и время: " + selectedDateTime);
+                
+                com.google.firebase.Timestamp timestamp = documentSnapshot.getTimestamp("timestamp");
+                if (timestamp != null) {
+                    selectedDateTime = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+                            .format(timestamp.toDate());
+                    textDateTime.setText("Дата и время: " + selectedDateTime);
+                }
 
                 selectedMoodStr = documentSnapshot.getString("mood");
                 if (selectedMoodStr != null) {
@@ -160,23 +166,73 @@ public class CreateNoteActivity extends AppCompatActivity {
         Map<String, Object> note = new HashMap<>();
         note.put("title", title);
         note.put("content", content);
-        note.put("dateTime", selectedDateTime);
+        
+        // Преобразуем выбранную дату в Timestamp
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault());
+            Date selectedDate = dateFormat.parse(selectedDateTime);
+            if (selectedDate != null) {
+                long timestamp = selectedDate.getTime();
+                com.google.firebase.Timestamp firebaseTimestamp = new com.google.firebase.Timestamp(timestamp / 1000, 0);
+                note.put("timestamp", firebaseTimestamp);
+                note.put("createdAt", timestamp);
+                
+                // Добавляем дополнительное логирование
+                Log.d("CreateNoteActivity", "Сохранение даты: " + selectedDateTime);
+                Log.d("CreateNoteActivity", "Timestamp (seconds): " + firebaseTimestamp.getSeconds());
+                Log.d("CreateNoteActivity", "CreatedAt: " + timestamp);
+            } else {
+                Log.e("CreateNoteActivity", "selectedDate is null");
+                com.google.firebase.Timestamp now = com.google.firebase.Timestamp.now();
+                note.put("timestamp", now);
+                note.put("createdAt", now.getSeconds() * 1000);
+            }
+        } catch (Exception e) {
+            Log.e("CreateNoteActivity", "Ошибка при парсинге даты: " + selectedDateTime, e);
+            com.google.firebase.Timestamp now = com.google.firebase.Timestamp.now();
+            note.put("timestamp", now);
+            note.put("createdAt", now.getSeconds() * 1000);
+        }
+        
         note.put("mood", selectedMoodStr != null ? selectedMoodStr : "Не указано");
         note.put("tags", selectedTags != null ? selectedTags : new ArrayList<String>());
         note.put("userId", userId);
 
         if (noteId == null) {
-            db.collection("notes").add(note).addOnSuccessListener(documentReference -> {
-                String newNoteId = documentReference.getId();
-                db.collection("notes").document(newNoteId).update("id", newNoteId);
-                Toast.makeText(this, "Заметка сохранена", Toast.LENGTH_SHORT).show();
-                finish();
-            });
+            db.collection("notes")
+                .add(note)
+                .addOnSuccessListener(documentReference -> {
+                    String newNoteId = documentReference.getId();
+                    note.put("id", newNoteId);
+                    db.collection("notes")
+                        .document(newNoteId)
+                        .set(note)  // Используем set вместо update
+                        .addOnSuccessListener(aVoid -> {
+                            Toast.makeText(this, "Заметка сохранена", Toast.LENGTH_SHORT).show();
+                            finish();
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e("CreateNoteActivity", "Ошибка при сохранении ID заметки", e);
+                            Toast.makeText(this, "Ошибка при сохранении", Toast.LENGTH_SHORT).show();
+                        });
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("CreateNoteActivity", "Ошибка при создании заметки", e);
+                    Toast.makeText(this, "Ошибка при сохранении", Toast.LENGTH_SHORT).show();
+                });
         } else {
-            db.collection("notes").document(noteId).update(note).addOnSuccessListener(aVoid -> {
-                Toast.makeText(this, "Заметка обновлена", Toast.LENGTH_SHORT).show();
-                finish();
-            });
+            note.put("id", noteId);
+            db.collection("notes")
+                .document(noteId)
+                .set(note)  // Используем set вместо update
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(this, "Заметка обновлена", Toast.LENGTH_SHORT).show();
+                    finish();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("CreateNoteActivity", "Ошибка при обновлении заметки", e);
+                    Toast.makeText(this, "Ошибка при обновлении", Toast.LENGTH_SHORT).show();
+                });
         }
     }
 }

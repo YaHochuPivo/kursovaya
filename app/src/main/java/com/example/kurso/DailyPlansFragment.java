@@ -7,16 +7,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import com.google.firebase.firestore.*;
+import java.util.*;
 
 public class DailyPlansFragment extends Fragment {
     private RecyclerView recyclerView;
     private TaskAdapter taskAdapter;
-    private List<String> taskList = new ArrayList<>();
+    private List<TaskItem> taskList = new ArrayList<>();
     private FirebaseFirestore db;
 
     public DailyPlansFragment() {}
@@ -27,10 +24,9 @@ public class DailyPlansFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recyclerDailyTasks);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        taskAdapter = new TaskAdapter(taskList);
-        recyclerView.setAdapter(taskAdapter);
-
         db = FirebaseFirestore.getInstance();
+        taskAdapter = new TaskAdapter(getContext(), taskList);
+        recyclerView.setAdapter(taskAdapter);
 
         loadLatestPlan();
 
@@ -39,19 +35,19 @@ public class DailyPlansFragment extends Fragment {
 
     private void loadLatestPlan() {
         db.collection("daily_plans")
-                .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .orderBy("timestamp", Query.Direction.DESCENDING)
                 .limit(1)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     taskList.clear();
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
-                        Map<String, Object> planData = doc.getData();
-                        for (String key : planData.keySet()) {
-                            if (!key.equals("timestamp")) {
-                                String task = planData.get(key).toString();
-                                if (!task.isEmpty()) {
-                                    taskList.add(task);
-                                }
+                    for (DocumentSnapshot doc : querySnapshot) {
+                        List<Map<String, Object>> rawTasks = (List<Map<String, Object>>) doc.get("tasks");
+                        if (rawTasks != null) {
+                            for (Map<String, Object> taskMap : rawTasks) {
+                                String text = (String) taskMap.get("text");
+                                String time = (String) taskMap.get("time");
+                                Boolean done = (Boolean) taskMap.get("completed");
+                                taskList.add(new TaskItem(text, time, done != null ? done : false));
                             }
                         }
                     }

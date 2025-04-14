@@ -1,57 +1,105 @@
 package com.example.kurso;
 
+import android.app.TimePickerDialog;
+import android.content.Context;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
-import android.widget.EditText;
+import android.view.*;
+import android.widget.*;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import java.util.List;
-import android.view.View;
-import com.example.kurso.databinding.ItemTaskBinding;
+
+import java.util.*;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
-    private List<String> taskList;
+    private final List<TaskItem> tasks;
+    private final Context context;
+    private OnTaskStatusChangeListener statusChangeListener;
 
-    public TaskAdapter(List<String> taskList) {
-        this.taskList = taskList;
+    public interface OnTaskStatusChangeListener {
+        void onTaskStatusChanged(int position, boolean isChecked);
+    }
+
+    public void setOnTaskStatusChangeListener(OnTaskStatusChangeListener listener) {
+        this.statusChangeListener = listener;
+    }
+
+    public TaskAdapter(Context context, List<TaskItem> tasks) {
+        this.context = context;
+        this.tasks = tasks;
     }
 
     @NonNull
     @Override
     public TaskViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemTaskBinding binding = ItemTaskBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new TaskViewHolder(binding);
+        View view = LayoutInflater.from(context).inflate(R.layout.item_task, parent, false);
+        return new TaskViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
-        holder.bind(taskList.get(position), position);
+        TaskItem task = tasks.get(position);
+
+        holder.editTask.setText(task.getText());
+        holder.textTime.setText(task.getTime());
+        holder.checkCompleted.setChecked(task.isDone());
+
+        holder.editTask.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                task.setText(s.toString());
+            }
+            @Override public void afterTextChanged(Editable s) { }
+        });
+
+        holder.checkCompleted.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            task.setDone(isChecked);
+            if (statusChangeListener != null) {
+                statusChangeListener.onTaskStatusChanged(position, isChecked);
+            }
+        });
+
+        // ✅ Выбор времени
+        holder.timeContainer.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            int hour = calendar.get(Calendar.HOUR_OF_DAY);
+            int minute = calendar.get(Calendar.MINUTE);
+
+            TimePickerDialog dialog = new TimePickerDialog(
+                    context,
+                    (view, hourOfDay, minute1) -> {
+                        String selectedTime = String.format(Locale.getDefault(), "%02d:%02d", hourOfDay, minute1);
+                        task.setTime(selectedTime);
+                        holder.textTime.setText(selectedTime);
+                    },
+                    hour, minute, true
+            );
+            dialog.show();
+        });
     }
 
     @Override
     public int getItemCount() {
-        return taskList.size();
+        return tasks.size();
     }
 
-    class TaskViewHolder extends RecyclerView.ViewHolder {
-        private final ItemTaskBinding binding;
+    public List<TaskItem> getTasks() {
+        return tasks;
+    }
 
-        public TaskViewHolder(ItemTaskBinding binding) {
-            super(binding.getRoot());
-            this.binding = binding;
-        }
+    public static class TaskViewHolder extends RecyclerView.ViewHolder {
+        EditText editTask;
+        TextView textTime;
+        CheckBox checkCompleted;
+        View timeContainer;
 
-        public void bind(String taskText, int position) {
-            binding.editTask.setText(taskText);
-            binding.editTask.addTextChangedListener(new TextWatcher() {
-                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-                @Override public void afterTextChanged(Editable s) {
-                    taskList.set(position, s.toString());
-                }
-            });
+        public TaskViewHolder(@NonNull View itemView) {
+            super(itemView);
+            editTask = itemView.findViewById(R.id.editTaskText);
+            textTime = itemView.findViewById(R.id.textTime);
+            checkCompleted = itemView.findViewById(R.id.checkCompleted);
+            timeContainer = itemView.findViewById(R.id.timeContainer); // 🔹 должен существовать в item_task.xml
         }
     }
 }
