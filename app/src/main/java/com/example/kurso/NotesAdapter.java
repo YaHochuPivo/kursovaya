@@ -7,6 +7,7 @@ import android.view.*;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.CheckBox;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,13 +32,52 @@ public class NotesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     private final Set<Integer> selectedPositions = new HashSet<>();
 
     private OnSelectionChangeListener selectionChangeListener;
+    private OnItemClickListener onItemClickListener;
+    private OnItemLongClickListener onItemLongClickListener;
+    private OnRestoreClickListener onRestoreClickListener;
+    private OnDeleteForeverClickListener onDeleteForeverClickListener;
+    private boolean isTrashMode = false;
 
     public interface OnSelectionChangeListener {
         void onSelectionChanged();
     }
 
+    public interface OnItemClickListener {
+        void onItemClick(Object item);
+    }
+
+    public interface OnItemLongClickListener {
+        void onItemLongClick(Object item);
+    }
+
+    public interface OnRestoreClickListener {
+        void onRestoreClick(Note note);
+    }
+
+    public interface OnDeleteForeverClickListener {
+        void onDeleteForeverClick(Note note);
+    }
+
     public void setOnSelectionChangeListener(OnSelectionChangeListener listener) {
         this.selectionChangeListener = listener;
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.onItemClickListener = listener;
+    }
+
+    public void setOnItemLongClickListener(OnItemLongClickListener listener) {
+        this.onItemLongClickListener = listener;
+    }
+
+    public void setOnRestoreClickListener(OnRestoreClickListener listener) {
+        this.onRestoreClickListener = listener;
+        this.isTrashMode = true;
+    }
+
+    public void setOnDeleteForeverClickListener(OnDeleteForeverClickListener listener) {
+        this.onDeleteForeverClickListener = listener;
+        this.isTrashMode = true;
     }
 
     private void notifySelectionChanged() {
@@ -147,80 +187,135 @@ public class NotesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     }
 
     class NoteViewHolder extends RecyclerView.ViewHolder {
-        TextView title, content, dateTime, mood, tags;
-        ImageButton btnEdit, btnDelete;
+        TextView title, description, dateTime, mood, tags;
+        ImageButton btnEdit, btnDelete, btnRestore, btnDeleteForever;
+        CheckBox checkBox;
 
         NoteViewHolder(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.textTitle);
-            content = itemView.findViewById(R.id.textContent);
+            description = itemView.findViewById(R.id.textDescription);
             dateTime = itemView.findViewById(R.id.textDateTime);
             mood = itemView.findViewById(R.id.textMood);
             tags = itemView.findViewById(R.id.textTags);
             btnEdit = itemView.findViewById(R.id.btnEdit);
             btnDelete = itemView.findViewById(R.id.btnDelete);
+            btnRestore = itemView.findViewById(R.id.btnRestore);
+            btnDeleteForever = itemView.findViewById(R.id.btnDeleteForever);
+            checkBox = itemView.findViewById(R.id.checkBox);
         }
 
         void bind(Note note, int position) {
             title.setText(note.getTitle());
-            content.setText(note.getContent());
+            description.setText(note.getContent());
             
-            // Форматируем дату из Timestamp или createdAt
-            String dateStr = "Дата: —";
-            if (note.getTimestamp() != null) {
-                dateStr = "Дата: " + new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-                        .format(note.getTimestamp().toDate());
-            } else if (note.getCreatedAt() > 0) {
-                dateStr = "Дата: " + new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-                        .format(new Date(note.getCreatedAt()));
-            }
+            // Форматируем и отображаем дату
+            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault());
+            String dateStr = sdf.format(new Date(note.getCreatedAt()));
             dateTime.setText(dateStr);
             
-            mood.setText("Настроение: " + (note.getMood() != null ? note.getMood() : "—"));
-            tags.setText(note.getTags() != null && !note.getTags().isEmpty()
-                    ? "Теги: " + String.join(", ", note.getTags())
-                    : "Теги: —");
+            // Отображаем настроение
+            if (note.getMood() != null && !note.getMood().isEmpty()) {
+                mood.setVisibility(View.VISIBLE);
+                mood.setText("Настроение: " + note.getMood());
+            } else {
+                mood.setVisibility(View.GONE);
+            }
+            
+            // Отображаем теги
+            if (note.getTags() != null && !note.getTags().isEmpty()) {
+                tags.setVisibility(View.VISIBLE);
+                tags.setText("Теги: " + String.join(", ", note.getTags()));
+            } else {
+                tags.setVisibility(View.GONE);
+            }
 
-            itemView.setBackgroundColor(selectedPositions.contains(position) ? Color.LTGRAY : Color.TRANSPARENT);
+            // Настройка видимости кнопок в зависимости от режима
+            if (isTrashMode) {
+                btnRestore.setVisibility(View.VISIBLE);
+                btnDeleteForever.setVisibility(View.VISIBLE);
+                btnEdit.setVisibility(View.GONE);
+                btnDelete.setVisibility(View.GONE);
 
-            itemView.setOnLongClickListener(v -> {
-                if (!selectionMode) {
-                    selectionMode = true;
-                    toggleSelection(position);
-                    notifyDataSetChanged(); // Обновляем все элементы для показа/скрытия кнопок
-                    return true;
-                }
-                return false;
-            });
+                btnRestore.setOnClickListener(v -> {
+                    if (onRestoreClickListener != null) {
+                        onRestoreClickListener.onRestoreClick(note);
+                    }
+                });
 
-            itemView.setOnClickListener(v -> {
-                if (selectionMode) {
-                    toggleSelection(position);
-                } else {
+                btnDeleteForever.setOnClickListener(v -> {
+                    if (onDeleteForeverClickListener != null) {
+                        onDeleteForeverClickListener.onDeleteForeverClick(note);
+                    }
+                });
+            } else {
+                btnRestore.setVisibility(View.GONE);
+                btnDeleteForever.setVisibility(View.GONE);
+                btnEdit.setVisibility(View.VISIBLE);
+                btnDelete.setVisibility(View.VISIBLE);
+
+                btnEdit.setOnClickListener(v -> {
                     Intent intent = new Intent(context, CreateNoteActivity.class);
                     intent.putExtra("noteId", note.getId());
                     context.startActivity(intent);
+                });
+
+                btnDelete.setOnClickListener(v -> {
+                    // Сначала получаем данные заметки
+                    FirebaseFirestore.getInstance()
+                        .collection("notes")
+                        .document(note.getId())
+                        .get()
+                        .addOnSuccessListener(documentSnapshot -> {
+                            if (documentSnapshot.exists()) {
+                                // Сохраняем в корзину
+                                FirebaseFirestore.getInstance()
+                                    .collection("deleted_notes")
+                                    .add(documentSnapshot.getData())
+                                    .addOnSuccessListener(reference -> {
+                                        // Удаляем из основной коллекции
+                                        FirebaseFirestore.getInstance()
+                                            .collection("notes")
+                                            .document(note.getId())
+                                            .delete()
+                                            .addOnSuccessListener(aVoid -> {
+                                                Toast.makeText(context, "Заметка перемещена в корзину", Toast.LENGTH_SHORT).show();
+                                                // Удаляем из списка
+                                                int pos = originalList.indexOf(note);
+                                                if (pos != -1) {
+                                                    originalList.remove(pos);
+                                                    filter(currentQuery);
+                                                }
+                                            })
+                                            .addOnFailureListener(e -> 
+                                                Toast.makeText(context, "Ошибка удаления заметки", Toast.LENGTH_SHORT).show()
+                                            );
+                                    })
+                                    .addOnFailureListener(e -> 
+                                        Toast.makeText(context, "Ошибка перемещения в корзину", Toast.LENGTH_SHORT).show()
+                                    );
+                            }
+                        });
+                });
+            }
+
+            // Обработка выделения
+            checkBox.setVisibility(selectionMode ? View.VISIBLE : View.GONE);
+            checkBox.setChecked(selectedPositions.contains(position));
+            
+            itemView.setOnClickListener(v -> {
+                if (selectionMode) {
+                    toggleSelection(position);
                 }
             });
-
-            btnEdit.setVisibility(selectionMode ? View.GONE : View.VISIBLE);
-            btnDelete.setVisibility(selectionMode ? View.GONE : View.VISIBLE);
-
-            btnEdit.setOnClickListener(v -> {
-                Intent intent = new Intent(context, CreateNoteActivity.class);
-                intent.putExtra("noteId", note.getId());
-                context.startActivity(intent);
-            });
-
-            btnDelete.setOnClickListener(v -> {
-                FirebaseFirestore.getInstance().collection("notes").document(note.getId())
-                        .delete()
-                        .addOnSuccessListener(aVoid -> {
-                            Toast.makeText(context, "Заметка удалена", Toast.LENGTH_SHORT).show();
-                            originalList.remove(note);
-                            filter(currentQuery);
-                        })
-                        .addOnFailureListener(e -> Toast.makeText(context, "Ошибка удаления", Toast.LENGTH_SHORT).show());
+            
+            itemView.setOnLongClickListener(v -> {
+                if (!selectionMode) {
+                    setSelectionMode(true);
+                    toggleSelection(position);
+                    return true;
+                }
+                return false;
             });
         }
     }
@@ -272,6 +367,8 @@ public class NotesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
             btnEditPlan.setOnClickListener(v -> {
                 Intent intent = new Intent(context, DailyPlanActivity.class);
+                intent.putExtra("planId", plan.getId());
+                intent.putParcelableArrayListExtra("tasks", new ArrayList<>(plan.getTasks()));
                 context.startActivity(intent);
             });
 

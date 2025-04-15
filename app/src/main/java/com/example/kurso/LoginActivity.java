@@ -2,13 +2,17 @@ package com.example.kurso;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.Patterns;
-import android.widget.EditText;
+import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -19,91 +23,94 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
-    private EditText emailField, passwordField;
-    private Button loginButton, registerButton;
-    private FirebaseAuth mAuth;
+    private EditText emailInput;
+    private EditText passwordInput;
+    private Button loginButton;
+    private TextView registerText;
+    private TextView forgotPasswordText;
+    private FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.auth_activity);
+        setContentView(R.layout.activity_login);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().hide();
         }
 
-        mAuth = FirebaseAuth.getInstance();
-        emailField = findViewById(R.id.emailField);
-        passwordField = findViewById(R.id.passwordField);
+        auth = FirebaseAuth.getInstance();
+
+        emailInput = findViewById(R.id.emailInput);
+        passwordInput = findViewById(R.id.passwordInput);
         loginButton = findViewById(R.id.loginButton);
-        registerButton = findViewById(R.id.registerButton);
+        registerText = findViewById(R.id.registerText);
+        forgotPasswordText = findViewById(R.id.forgotPasswordText);
 
         loginButton.setOnClickListener(v -> loginUser());
-        registerButton.setOnClickListener(v -> registerUser());
-    }
-
-    private void registerUser() {
-        String email = emailField.getText().toString().trim();
-        String password = passwordField.getText().toString().trim();
-
-        if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Заполните все поля", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            Toast.makeText(this, "Неверный формат почты", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (password.length() < 6) {
-            Toast.makeText(this, "Пароль должен содержать не менее 6 символов", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, task -> {
-                    if (task.isSuccessful()) {
-                        Toast.makeText(this, "Регистрация прошла успешно", Toast.LENGTH_SHORT).show();
-                        saveUserFirestore(email);
-                    } else {
-                        if (task.getException() != null) {
-                            Toast.makeText(this, "Ошибка: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                            Log.e("AuthError", "Ошибка регистрации", task.getException());
-                        }
-                    }
-                });
+        registerText.setOnClickListener(v -> startActivity(new Intent(LoginActivity.this, RegisterActivity.class)));
+        forgotPasswordText.setOnClickListener(v -> showResetPasswordDialog());
     }
 
     private void loginUser() {
-        String email = emailField.getText().toString().trim();
-        String password = passwordField.getText().toString().trim();
+        String email = emailInput.getText().toString().trim();
+        String password = passwordInput.getText().toString().trim();
 
-        if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Введите email и пароль", Toast.LENGTH_SHORT).show();
+        if (TextUtils.isEmpty(email)) {
+            emailInput.setError("Введите email");
             return;
         }
 
-        mAuth.signInWithEmailAndPassword(email, password)
+        if (TextUtils.isEmpty(password)) {
+            passwordInput.setError("Введите пароль");
+            return;
+        }
+
+        auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
                         startMainActivity();
                     } else {
-                        Toast.makeText(this, "Ошибка авторизации", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(LoginActivity.this, "Ошибка авторизации: " + 
+                            task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
     }
 
-    private void saveUserFirestore(String email) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        Map<String, Object> user = new HashMap<>();
-        user.put("email", email);
+    private void showResetPasswordDialog() {
+        View view = getLayoutInflater().inflate(R.layout.dialog_reset_password, null);
+        EditText emailEditText = view.findViewById(R.id.resetEmailInput);
 
-        db.collection("users").document(mAuth.getCurrentUser().getUid())
-                .set(user)
-                .addOnSuccessListener(e -> startMainActivity())
-                .addOnFailureListener(e -> Toast.makeText(this, "Ошибка сохранения данных", Toast.LENGTH_SHORT).show());
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+            .setTitle("Восстановление пароля")
+            .setView(view)
+            .setPositiveButton("Отправить", (dialog, which) -> {
+                String email = emailEditText.getText().toString().trim();
+                if (!TextUtils.isEmpty(email)) {
+                    resetPassword(email);
+                } else {
+                    Toast.makeText(LoginActivity.this, "Введите email", Toast.LENGTH_SHORT).show();
+                }
+            })
+            .setNegativeButton("Отмена", null);
+
+        builder.create().show();
+    }
+
+    private void resetPassword(String email) {
+        auth.sendPasswordResetEmail(email)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(LoginActivity.this,
+                                "Инструкции по восстановлению пароля отправлены на email",
+                                Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(LoginActivity.this,
+                                "Ошибка отправки: " + task.getException().getMessage(),
+                                Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
     private void startMainActivity() {

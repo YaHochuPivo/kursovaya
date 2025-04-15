@@ -1,5 +1,29 @@
 <resources>
-    <string name="app_name">kurso</string>
+    <string name="app_name">Kurso</string>
     <string name="delete_description">Удалить</string>
-
+    <string name="email_format">Email: %s</string>
+    <string name="name_format">Имя: %s</string>
+    <string name="registration_date_format">Дата регистрации: %s</string>
+    <string name="bio_format">О себе: %s</string>
+    <string name="dark_theme">Тёмная</string>
+    <string name="light_theme">Светлая</string>
+    <string name="settings">Настройки</string>
+    <string name="appearance">Внешний вид</string>
+    <string name="dark_theme_enabled">Темная тема включена</string>
+    <string name="light_theme_enabled">Светлая тема включена</string>
+    <string name="app_settings">Настройки приложения</string>
+    <string name="theme">Тема</string>
+    <string name="back">Назад</string>
+    <string name="friends">Друзья</string>
+    <string name="friend_profile">Профиль друга</string>
+    <string name="search">Поиск</string>
+    <string name="search_users">Поиск пользователей</string>
+    <string name="action_button">Действие</string>
+    <string name="mood_statistics">Статистика настроения</string>
+    <string name="total_notes_format">Всего заметок: %d</string>
+    <string name="predominant_mood_format">Преобладающее настроение: %s</string>
+    <string name="profile_image">Фото профиля</string>
+    <string name="view_mood_history">История настроения</string>
+    <string name="statistics">Статистика</string>
+    <string name="mood_dynamics">Динамика настроения</string>
 </resources>

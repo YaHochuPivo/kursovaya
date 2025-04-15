@@ -3,5 +3,20 @@
         android:id="@+id/nav_notes"
         android:icon="@drawable/ic_notes"
         android:title="Заметки" />
+    
+    <item
+        android:id="@+id/nav_statistics"
+        android:icon="@drawable/ic_statistics"
+        android:title="Статистика" />
+    
+    <item
+        android:id="@+id/nav_friends"
+        android:icon="@drawable/ic_friends"
+        android:title="@string/friends" />
+
+    <item
+        android:id="@+id/nav_settings"
+        android:icon="@drawable/ic_settings"
+        android:title="@string/settings" />
 
 </menu>

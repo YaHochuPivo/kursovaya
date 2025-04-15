@@ -56,7 +56,7 @@ public class FileUtils {
 
                 Log.d("FileUtils", "Подготовка к экспорту в файл: " + exportFile.getAbsolutePath());
 
-                switch (format.toLowerCase()) {
+            switch (format.toLowerCase()) {
                     case "json":
                         exportToJson(items, exportFile);
                         break;
@@ -76,11 +76,11 @@ public class FileUtils {
                     Toast.makeText(context, message, Toast.LENGTH_LONG).show();
                 });
 
-            } catch (Exception e) {
+        } catch (Exception e) {
                 String errorMessage = "Ошибка при экспорте: " + e.getMessage();
                 Log.e("FileUtils", errorMessage, e);
                 handler.post(() -> Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show());
-            }
+        }
         });
     }
 

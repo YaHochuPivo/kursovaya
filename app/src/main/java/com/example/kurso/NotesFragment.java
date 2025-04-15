@@ -79,7 +79,7 @@ public class NotesFragment extends Fragment {
         btnAddNote.setOnClickListener(v -> startActivity(new Intent(getContext(), CreateNoteActivity.class)));
         btnAddPlan.setOnClickListener(v -> startActivity(new Intent(getContext(), DailyPlanActivity.class)));
         btnImport.setOnClickListener(v -> showFormatSelectionDialog("import"));
-        
+
         // Обработчик обычного клика для экспорта
         btnExport.setOnClickListener(v -> {
             if (adapter.isSelectionMode() && adapter.getSelectedCount() > 0) {
@@ -272,7 +272,7 @@ public class NotesFragment extends Fragment {
         noteData.put("createdAt", timestamp);
         
         Log.d("NotesFragment", "Сохранение заметки: " + note.getTitle() + ", время создания: " + new Date(timestamp));
-        
+
         db.collection("notes")
             .document(noteId)
             .set(noteData)
@@ -327,7 +327,7 @@ public class NotesFragment extends Fragment {
             Log.d("NotesFragment", "Сохранение плана. Timestamp: " + sdf.format(new Date(timestamp)) + 
                 ", Задач: " + tasksList.size());
 
-            db.collection("daily_plans")
+                    db.collection("daily_plans")
                 .add(planData)
                 .addOnSuccessListener(documentReference -> {
                     savedItems[0]++;
@@ -429,7 +429,7 @@ public class NotesFragment extends Fragment {
         // Load daily plans
         db.collection("daily_plans")
             .whereEqualTo("userId", userId)
-            .get()
+                            .get()
             .addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     List<PlanWrapper> plans = new ArrayList<>();
@@ -569,14 +569,50 @@ public class NotesFragment extends Fragment {
         if (FirebaseAuth.getInstance().getCurrentUser() != null) {
             loadData();
         }
-    }
+            }
 
-    @Override
+            @Override
     public void onDestroyView() {
         super.onDestroyView();
         // Отписываемся от обновлений при уничтожении представления
         if (notesListener != null) {
             notesListener.remove();
         }
+    }
+
+    private void deleteNote(Note note) {
+        if (note == null || note.getId() == null) return;
+
+        // Перемещаем заметку в корзину вместо удаления
+        db.collection("notes").document(note.getId())
+            .get()
+            .addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists()) {
+                    // Сохраняем заметку в коллекции удаленных заметок
+                    db.collection("deleted_notes")
+                        .add(documentSnapshot.getData())
+                        .addOnSuccessListener(reference -> {
+                            // После успешного сохранения в корзине, удаляем из основной коллекции
+                            db.collection("notes")
+                                .document(note.getId())
+                                .delete()
+                                .addOnSuccessListener(aVoid -> {
+                                    if (getContext() != null) {
+                                        Toast.makeText(getContext(), "Заметка перемещена в корзину", Toast.LENGTH_SHORT).show();
+                                    }
+                                })
+                                .addOnFailureListener(e -> {
+                                    if (getContext() != null) {
+                                        Toast.makeText(getContext(), "Ошибка удаления заметки", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                        })
+                        .addOnFailureListener(e -> {
+                            if (getContext() != null) {
+                                Toast.makeText(getContext(), "Ошибка перемещения в корзину", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            }
+        });
     }
 }
