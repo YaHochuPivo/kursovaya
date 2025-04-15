@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_notes">
+
+    <fragment
+        android:id="@+id/nav_notes"
+        android:name="com.example.kurso.NotesFragment"
+        android:label="Заметки" />
+
+    <fragment
+        android:id="@+id/nav_statistics"
+        android:name="com.example.kurso.StatisticsFragment"
+        android:label="Статистика" />
+
+    <fragment
+        android:id="@+id/nav_friends"
+        android:name="com.example.kurso.FriendsFragment"
+        android:label="@string/friends">
+        <action
+            android:id="@+id/action_nav_friends_to_friendProfileFragment"
+            app:destination="@id/friendProfileFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_settings"
+        android:name="com.example.kurso.SettingsMenuFragment"
+        android:label="@string/settings" />
+
+    <fragment
+        android:id="@+id/friendProfileFragment"
+        android:name="com.example.kurso.FriendProfileFragment"
+        android:label="@string/friend_profile">
+        <argument
+            android:name="userId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_friendProfileFragment_to_friendMoodHistoryFragment"
+            app:destination="@id/friendMoodHistoryFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/friendMoodHistoryFragment"
+        android:name="com.example.kurso.FriendMoodHistoryFragment"
+        android:label="История настроения">
+        <argument
+            android:name="userId"
+            app:argType="string" />
+    </fragment>
+
+</navigation> 
