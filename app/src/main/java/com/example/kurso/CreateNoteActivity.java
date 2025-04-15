@@ -209,6 +209,9 @@ public class CreateNoteActivity extends AppCompatActivity {
                         .set(note)  // Используем set вместо update
                         .addOnSuccessListener(aVoid -> {
                             Toast.makeText(this, "Заметка сохранена", Toast.LENGTH_SHORT).show();
+                            // Обновляем статистику
+                            Intent intent = new Intent("com.example.kurso.UPDATE_STATISTICS");
+                            sendBroadcast(intent);
                             finish();
                         })
                         .addOnFailureListener(e -> {
@@ -227,6 +230,9 @@ public class CreateNoteActivity extends AppCompatActivity {
                 .set(note)  // Используем set вместо update
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(this, "Заметка обновлена", Toast.LENGTH_SHORT).show();
+                    // Обновляем статистику
+                    Intent intent = new Intent("com.example.kurso.UPDATE_STATISTICS");
+                    sendBroadcast(intent);
                     finish();
                 })
                 .addOnFailureListener(e -> {
