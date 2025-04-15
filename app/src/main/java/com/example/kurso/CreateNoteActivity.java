@@ -80,7 +80,7 @@ public class CreateNoteActivity extends AppCompatActivity {
 
     private void setupMoodSelection() {
         int[] moodIds = {R.id.mood_sad, R.id.mood_angry, R.id.mood_neutral, R.id.mood_happy, R.id.mood_excited};
-        String[] moodValues = {"Грустный", "Злой", "Нейтральный", "Счастливый", "Возбужденный"};
+        String[] moodValues = {"Грустный", "Злой", "Нейтральный", "Счастливый", "Веселый"};
 
         for (int i = 0; i < moodIds.length; i++) {
             int index = i;
