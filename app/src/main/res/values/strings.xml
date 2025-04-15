@@ -26,4 +26,8 @@
     <string name="view_mood_history">История настроения</string>
     <string name="statistics">Статистика</string>
     <string name="mood_dynamics">Динамика настроения</string>
+    <string name="send_gift">Подарить</string>
+    <string name="gifts">Подарки</string>
+    <string name="gift_from">Подарок от %s</string>
+    <string name="my_gifts">Мои подарки</string>
 </resources>

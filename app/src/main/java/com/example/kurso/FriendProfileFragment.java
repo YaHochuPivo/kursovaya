@@ -24,6 +24,9 @@ import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+import com.google.android.material.button.MaterialButton;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -43,11 +46,15 @@ public class FriendProfileFragment extends Fragment {
     private TextView emailText;
     private TextView bioText;
     private ImageButton backButton;
+    private MaterialButton giftButton;
     private FirebaseFirestore db;
     private String userId;
     private LineChart moodChart;
     private TextView dominantMoodText;
     private TextView totalEntriesText;
+    private RecyclerView giftsRecyclerView;
+    private GiftAdapter giftAdapter;
+    private List<Gift> gifts = new ArrayList<>();
 
     public static FriendProfileFragment newInstance(String userId) {
         FriendProfileFragment fragment = new FriendProfileFragment();
@@ -70,6 +77,11 @@ public class FriendProfileFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_friend_profile, container, false);
 
+        // Скрываем нижнюю навигацию
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).hideBottomNavigation();
+        }
+
         // Инициализация компонентов
         profileImageView = view.findViewById(R.id.profileImageView);
         displayNameText = view.findViewById(R.id.displayNameText);
@@ -79,6 +91,15 @@ public class FriendProfileFragment extends Fragment {
         moodChart = view.findViewById(R.id.moodChart);
         dominantMoodText = view.findViewById(R.id.dominantMoodText);
         totalEntriesText = view.findViewById(R.id.totalEntriesText);
+        giftButton = view.findViewById(R.id.giftButton);
+
+        // Настройка кнопки подарка
+        giftButton.setOnClickListener(v -> {
+            if (userId != null) {
+                GiftDialogFragment giftDialog = GiftDialogFragment.newInstance(userId);
+                giftDialog.show(getParentFragmentManager(), "gift_dialog");
+            }
+        });
 
         // Настройка кнопки "Назад"
         backButton.setOnClickListener(v -> requireActivity().onBackPressed());
@@ -100,6 +121,15 @@ public class FriendProfileFragment extends Fragment {
                 .replace(R.id.statisticsContainer, statisticsFragment)
                 .commit();
         }
+
+        // Инициализация списка подарков
+        giftsRecyclerView = view.findViewById(R.id.giftsRecyclerView);
+        giftAdapter = new GiftAdapter(gifts);
+        giftsRecyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 3));
+        giftsRecyclerView.setAdapter(giftAdapter);
+        
+        // Загрузка подарков
+        loadGifts();
 
         return view;
     }
@@ -315,6 +345,40 @@ public class FriendProfileFragment extends Fragment {
                         profileImageView.setImageResource(R.drawable.default_avatar);
                     }
                 }
+            });
+    }
+
+    private void loadGifts() {
+        if (userId == null) {
+            Log.e(TAG, "Cannot load gifts: userId is null");
+            return;
+        }
+
+        Log.d(TAG, "Loading gifts for user: " + userId);
+        
+        db.collection("gifts")
+            .whereEqualTo("toUserId", userId)
+            .get()
+            .addOnSuccessListener(queryDocumentSnapshots -> {
+                Log.d(TAG, "Found " + queryDocumentSnapshots.size() + " gifts");
+                gifts.clear();
+                for (var doc : queryDocumentSnapshots) {
+                    Gift gift = doc.toObject(Gift.class);
+                    if (gift != null) {
+                        Log.d(TAG, "Adding gift: type=" + gift.getGiftType() + 
+                            ", from=" + gift.getFromUserDisplayName());
+                        gifts.add(gift);
+                    }
+                }
+                // Сортируем подарки по времени локально
+                gifts.sort((g1, g2) -> Long.compare(g2.getTimestamp(), g1.getTimestamp()));
+                giftAdapter.updateGifts(gifts);
+                Log.d(TAG, "Updated gifts adapter with " + gifts.size() + " gifts");
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error loading gifts", e);
+                Toast.makeText(requireContext(), "Ошибка при загрузке подарков: " + e.getMessage(), 
+                    Toast.LENGTH_SHORT).show();
             });
     }
 } 

@@ -71,4 +71,23 @@ public class MainActivity extends AppCompatActivity {
             super.onBackPressed();
         }
     }
+
+    public void hideBottomNavigation() {
+        if (bottomNav != null) {
+            bottomNav.setVisibility(View.GONE);
+        }
+        if (fragmentContainer != null) {
+            fragmentContainer.setVisibility(View.VISIBLE);
+        }
+    }
+
+    public void showBottomNavigation() {
+        if (bottomNav != null) {
+            bottomNav.setVisibility(View.VISIBLE);
+            bottomNav.setSelectedItemId(R.id.nav_settings);
+        }
+        if (fragmentContainer != null) {
+            fragmentContainer.setVisibility(View.GONE);
+        }
+    }
 }

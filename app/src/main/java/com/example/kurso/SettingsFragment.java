@@ -157,22 +157,40 @@ public class SettingsFragment extends Fragment {
         // Обработка нажатия кнопки "Назад"
         backButton.setOnClickListener(v -> {
             if (isAdded() && getActivity() != null) {
-                // Возвращаемся к предыдущему фрагменту
-                getActivity().getSupportFragmentManager().popBackStackImmediate();
+                // Делаем кнопку временно неактивной для предотвращения двойных нажатий
+                backButton.setEnabled(false);
                 
-                // Показываем нижнюю навигацию и выбираем вкладку настроек
-                View bottomNav = getActivity().findViewById(R.id.bottomNav);
-                View fragmentContainer = getActivity().findViewById(R.id.fragmentContainer);
-                if (bottomNav instanceof BottomNavigationView && fragmentContainer != null) {
-                    fragmentContainer.setVisibility(View.GONE);
-                    bottomNav.setVisibility(View.VISIBLE);
-                    ((BottomNavigationView) bottomNav).setSelectedItemId(R.id.nav_settings);
+                try {
+                    // Возвращаемся к предыдущему фрагменту немедленно
+                    getParentFragmentManager().popBackStackImmediate();
+                    
+                    // Отправляем сообщение в MainActivity для обновления UI
+                    if (getActivity() instanceof MainActivity) {
+                        ((MainActivity) getActivity()).showBottomNavigation();
+                    }
+                } catch (Exception e) {
+                    Log.e("SettingsFragment", "Error during navigation: " + e.getMessage());
                 }
+                
+                // Возвращаем активность кнопке через небольшую задержку
+                backButton.postDelayed(() -> backButton.setEnabled(true), 300);
             }
         });
 
         ImageButton changePhotoButton = view.findViewById(R.id.changePhotoButton);
         changePhotoButton.setOnClickListener(v -> openImagePicker());
+
+        // Настройка кнопки "Мои подарки"
+        view.findViewById(R.id.myGiftsButton).setOnClickListener(v -> {
+            if (isAdded() && getActivity() != null) {
+                MyGiftsFragment myGiftsFragment = new MyGiftsFragment();
+                getParentFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragmentContainer, myGiftsFragment)
+                    .addToBackStack(null)
+                    .commit();
+            }
+        });
 
         return view;
     }

@@ -23,13 +23,25 @@
             android:tint="?attr/colorOnSurface" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/friend_profile"
             android:textSize="20sp"
             android:textStyle="bold"
             android:layout_marginStart="16dp"
+            android:layout_weight="1"
             android:textColor="?attr/colorOnSurface" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/giftButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/send_gift"
+            android:layout_marginStart="8dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:drawableStart="@drawable/ic_gift_present"
+            android:drawablePadding="8dp"
+            android:drawableTint="?attr/colorPrimary" />
     </LinearLayout>
 
     <ScrollView
@@ -119,6 +131,21 @@
                 android:id="@+id/moodChart"
                 android:layout_width="match_parent"
                 android:layout_height="300dp"
+                android:layout_marginBottom="24dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/gifts"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface"
+                android:layout_marginBottom="16dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/giftsRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp" />
 
         </LinearLayout>

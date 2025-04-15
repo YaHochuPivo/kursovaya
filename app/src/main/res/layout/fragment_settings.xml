@@ -130,6 +130,16 @@
             android:layout_marginBottom="8dp"/>
 
         <Button
+            android:id="@+id/myGiftsButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/my_gifts"
+            android:drawableStart="@drawable/ic_gift_present"
+            android:drawablePadding="8dp"
+            android:drawableTint="?attr/colorOnPrimary"
+            android:layout_marginBottom="8dp"/>
+
+        <Button
             android:id="@+id/changePasswordButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
