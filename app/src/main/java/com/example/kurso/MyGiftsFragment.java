@@ -9,6 +9,8 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.firebase.auth.FirebaseAuth;
@@ -38,7 +40,18 @@ public class MyGiftsFragment extends Fragment {
 
         // Настройка кнопки "Назад"
         ImageButton backButton = view.findViewById(R.id.backButton);
-        backButton.setOnClickListener(v -> requireActivity().onBackPressed());
+        backButton.setOnClickListener(v -> {
+            if (getActivity() instanceof MainActivity) {
+                MainActivity activity = (MainActivity) getActivity();
+                
+                // Показываем нижнюю навигацию
+                activity.showBottomNavigation();
+                
+                // Переходим на вкладку "Заметки"
+                NavController navController = Navigation.findNavController(activity, R.id.nav_host_fragment);
+                navController.navigate(R.id.nav_notes);
+            }
+        });
 
         // Инициализация списка подарков
         giftsRecyclerView = view.findViewById(R.id.giftsRecyclerView);

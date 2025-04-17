@@ -138,13 +138,18 @@ public class FriendsFragment extends Fragment implements FriendsAdapter.OnFriend
 
     @Override
     public void onFriendClick(User user) {
-        // Открываем профиль друга
-        FriendProfileFragment fragment = FriendProfileFragment.newInstance(user.getUserId());
-        requireActivity().getSupportFragmentManager()
-            .beginTransaction()
-            .replace(R.id.nav_host_fragment, fragment)
-            .addToBackStack(null)
-            .commit();
+        if (getActivity() instanceof MainActivity) {
+            // Открываем профиль друга
+            FriendProfileFragment fragment = FriendProfileFragment.newInstance(user.getUserId());
+            requireActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragmentContainer, fragment)
+                .addToBackStack(null)
+                .commit();
+            
+            // Скрываем нижнюю навигацию
+            ((MainActivity) getActivity()).hideBottomNavigation();
+        }
     }
 
     @Override

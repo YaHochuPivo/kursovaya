@@ -119,7 +119,7 @@ public class FriendProfileFragment extends Fragment {
             getChildFragmentManager()
                 .beginTransaction()
                 .replace(R.id.statisticsContainer, statisticsFragment)
-                .commit();
+                .commitNow();
         }
 
         // Инициализация списка подарков

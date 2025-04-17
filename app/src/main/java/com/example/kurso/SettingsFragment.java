@@ -192,6 +192,15 @@ public class SettingsFragment extends Fragment {
             }
         });
 
+        // Настройка кнопки настроек уведомлений
+        Button notificationSettingsButton = view.findViewById(R.id.notificationSettingsButton);
+        notificationSettingsButton.setOnClickListener(v -> {
+            if (isAdded() && getContext() != null) {
+                NotificationSettingsDialog dialog = new NotificationSettingsDialog(getContext());
+                dialog.show();
+            }
+        });
+
         return view;
     }
 

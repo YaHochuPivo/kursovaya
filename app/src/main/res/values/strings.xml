@@ -30,4 +30,12 @@
     <string name="gifts">Подарки</string>
     <string name="gift_from">Подарок от %s</string>
     <string name="my_gifts">Мои подарки</string>
+    <string name="notification_settings">Настройки уведомлений</string>
+    <string name="set_notification_time">Установить время уведомлений</string>
+    <string name="cancel">Отмена</string>
+    <string name="save">Сохранить</string>
+    <string name="enable_notifications">Включить уведомления</string>
+    <string name="notification_time">Время уведомления: %02d:%02d</string>
+    <string name="notes">Заметки</string>
+    <string name="trash">Корзина</string>
 </resources>

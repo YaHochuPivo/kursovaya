@@ -1,18 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/nav_notes"
         android:icon="@drawable/ic_notes"
-        android:title="Заметки" />
+        android:title="@string/notes" />
     
     <item
         android:id="@+id/nav_statistics"
         android:icon="@drawable/ic_statistics"
-        android:title="Статистика" />
+        android:title="@string/statistics" />
     
     <item
         android:id="@+id/nav_friends"
         android:icon="@drawable/ic_friends"
         android:title="@string/friends" />
+
+    <item
+        android:id="@+id/nav_trash"
+        android:icon="@drawable/ic_trash"
+        android:title="@string/trash" />
 
     <item
         android:id="@+id/nav_settings"

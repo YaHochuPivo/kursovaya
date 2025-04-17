@@ -4,11 +4,11 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-04-15T16:46:36.890635100Z">
+        <DropdownSelection timestamp="2025-04-17T17:51:01.339131300Z">
           <Target type="DEFAULT_BOOT">
-            <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\eliza\.android\avd\Medium_Phone_2.avd" />
-            </handle>
+            <template>
+              <DeviceId pluginId="FirebaseDirectAccess" type="TEMPLATE" identifier="model_id=dm2q/34" />
+            </template>
           </Target>
         </DropdownSelection>
         <DialogSelection />
